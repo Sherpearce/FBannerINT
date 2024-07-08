@@ -6,14 +6,13 @@ from mytoken import get_token
 from asyncio import run, create_task, sleep
 
 # Pour l'envoi de l'image sans la télécharger
-from io import BytesIO, StringIO
+from io import BytesIO
 from aiohttp import ClientSession
 
 # Faire passer des dates
 from datetime import datetime
 
-# Récupérer et traiter le lien 
-#from wget import download
+# Récupérer et traiter le lien
 import xml.etree.cElementTree as cET
 from lxml import etree
 
@@ -24,14 +23,15 @@ async def load_menu_url():
     parser = etree.XMLParser(recover = True)
 
     async with ClientSession() as session:
-         async with session.get(dnld) as resp:
+        async with session.get(dnld) as resp:
             if resp.status != 200:
                 print(f'Erreur lors du chargement de la page : {resp}')
                 return
             data = BytesIO(await resp.read())
 
     root = cET.parse(data, parser=parser).getroot()
-    # ça devrait être la bonne ligne (elle fonctionne si on enregistre le fichier mais pas avec les BytesIO)
+    # ça devrait être la bonne ligne
+    # elle fonctionne si on enregistre le fichier mais pas avec les BytesIO)
     img = root.find('./html/head/[@property="og:image"]')
     picture_link = ''
     if img is None:
@@ -42,9 +42,10 @@ async def load_menu_url():
         picture_link = img.attrib["src"]
     return picture_link
 
-async def send_message(client, BIO:BytesIO):
+async def send_message(client, b_io:BytesIO):
     """
-    Envoi du document du buffer @BIO dans les channels du ficher "channels.txt" via le bot actif @client
+    Envoi du document du buffer @b_io dans les channels du ficher "channels.txt" 
+    via le bot discord actif @client
     """
     # attend que la connection soit établie
     await client.wait_until_ready()
@@ -54,11 +55,11 @@ async def send_message(client, BIO:BytesIO):
     # envoi un message dans tous les channels enregistrés
     for channel_id in load_channels():
         file = discord.File(
-            BIO, 
+            b_io,
             f"Menu de la semaine du {datetime.today().strftime('%Y-%m-%d')}.jpg", 
             description=f"Menu de la semaine du {datetime.today().strftime('%Y-%m-%d')} à l'INT"
             )
-        BIO.seek(0)
+        b_io.seek(0)
         channel = client.get_channel(channel_id) #new des Héros
         await channel.send("File incomming")
         await channel.send(file=file)
@@ -67,7 +68,8 @@ async def send_message(client, BIO:BytesIO):
 def load_channels():
     """
     renvoi une liste des channels surlesquels envoyer un message.
-    Les channels sont stockés dans le fichier "channels.txt" un par ligne avec des commentaires possibles après un '#'
+    Les channels sont stockés dans le fichier "channels.txt" un par ligne 
+    avec des commentaires possibles après un '#'
     """
     num_line = 1
     liste_channels = []
@@ -96,7 +98,8 @@ async def connection(client):
 async def envoi_image_en_ligne(url):
     """
     Envoi l'image donnée en URL sur les channels répertoriés dans le fichier "channels.txt"
-    Initialise un bot discord, récupère l'image à envoyer et envoi l'image dans les différents salons
+    Initialise un bot discord, récupère un stream de l'image à envoyer puis
+    envoi l'image dans les différents salons (channels)
     """
     flags = discord.flags.Intents.default()
     client = discord.Client(intents=flags)
@@ -119,7 +122,23 @@ async def envoi_image_en_ligne(url):
     await sd_message
     await connect
 
+def urls_differentes(nouvelle_url):
+    """
+    Teste si l'url @nouvelle_url est différente de l'url enregistrée dans le fichier "lien.txt"
+    renvoi un boolean
+        - True  si différentes
+        - False si identiques
+    """
+    with open("lien.txt", 'r', encoding = "utf-8") as fch_lien:
+        ancienne_url = fch_lien.readline()
+        print(ancienne_url)
+        print(nouvelle_url)
+
+    return ancienne_url != nouvelle_url
+
 if __name__ == "__main__":
-    #run(envoi_image_en_ligne("https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Orange_trademark.svg/64px-Orange_trademark.svg.png"))
-    print(run(load_menu_url()))
-    pass
+    #link = "
+    # https://upload.wikimedia.org/wikipedia/commons/
+    # thumb/7/73/Orange_trademark.svg/64px-Orange_trademark.svg.png"
+    #run(envoi_image_en_ligne(link))
+    print(urls_differentes(run(load_menu_url())))
