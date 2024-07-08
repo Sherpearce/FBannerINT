@@ -10,7 +10,7 @@ from io import BytesIO
 from aiohttp import ClientSession
 
 # Faire passer des dates
-from datetime import datetime
+from datetime import datetime, date, time, deltatime
 
 # Récupérer et traiter le lien
 import xml.etree.cElementTree as cET
@@ -61,7 +61,6 @@ async def send_message(client, b_io:BytesIO):
             )
         b_io.seek(0)
         channel = client.get_channel(channel_id) #new des Héros
-        await channel.send("File incomming")
         await channel.send(file=file)
     await client.close()
 
@@ -121,6 +120,7 @@ async def envoi_image_en_ligne(url):
     sd_message = create_task(send_message(client, data))
     await sd_message
     await connect
+    return True
 
 def urls_differentes(nouvelle_url):
     """
@@ -136,9 +136,81 @@ def urls_differentes(nouvelle_url):
 
     return ancienne_url != nouvelle_url
 
+def calcul_temps_d_attente(reussite:boolean):
+    """
+    Renvoi le temps d'attente en secondes avant le prochain horaire de vérification
+    Les horaires sont:
+        - dimanche 20h
+        - dimanche 22h
+        - lundi 20h
+    
+    si @reussite vaut True, renvoit le temps d'attente avant le prochain "dimanche 20h"
+    """
+    now = datetime.today()
+    now_iso = now.isocalendar()
+    wake_up = None
+
+    if reussite:
+        week = now_iso.week
+        # il faut changer de semaine si on est encore dimanche
+        if now_iso.weekday == 7:
+            week +=1
+        wake_up = datetime.combine(
+            date(now_iso.year, week, now_iso.weekday),
+            time(hour = 20)
+        )
+    else:
+        # dijonction de cas du dimanche
+        if now_iso.weekday == 7:
+            if now.hour < 20:
+                wake_up = datetime.combine(
+                    date(now_iso.year, now_iso.week, now_iso.weekday),
+                    time(hour = 20)
+                )
+            elif now.hour < 22:
+                wake_up = datetime.combine(
+                    date(now_iso.year, now_iso.week, now_iso.weekday),
+                    time(hour = 22)
+                )
+            else:
+                wake_up = datetime.combine(
+                    date(now_iso.year, now_iso.week +1, 1),
+                    time(hour = 20)
+                )
+        # lundi avant 20h
+        elif now_iso.weekday == 1 and now.hour < 20:
+            wake_up = datetime.combine(
+                    date(now_iso.year, now_iso.week +1, 1),
+                    time(hour = 20)
+                )
+        #cas général
+        else:
+            wake_up = datetime.combine(
+                    date(now_iso.year, now_iso.week +1, 7),
+                    time(hour = 20)
+                )
+    return (wake_up-now).total_seconds()
+
+
+def main():
+    """
+    Lancement général du service 
+    """
+    # calcul du temps d'attente avant première vérification (dimanche 20h)
+    temps_d_attente = 0 # en secondes
+
+    #lancement immédiat
+    while True:
+        print("Lancement !")
+        new_url = load_menu_url()
+        reussite = False
+        if urls_differentes(new_url):
+            reussite = run(envoi_image_en_ligne)
+        sleep(calcul_temps_d_attente(reussite=reussite))
+
 if __name__ == "__main__":
     #link = "
     # https://upload.wikimedia.org/wikipedia/commons/
     # thumb/7/73/Orange_trademark.svg/64px-Orange_trademark.svg.png"
     #run(envoi_image_en_ligne(link))
-    print(urls_differentes(run(load_menu_url())))
+    print(calcul_temps_d_attente())
