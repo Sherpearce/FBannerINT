@@ -7,6 +7,8 @@ from lxml import etree
 from io import BytesIO
 from aiohttp import ClientSession
 
+NOM_FICHIER = "lien.txt"
+
 async def load_menu_url():
 
     dnld = "https://www.facebook.com/groups/campusTMSP/"
@@ -40,10 +42,13 @@ def urls_differentes(nouvelle_url):
         - True  si différentes
         - False si identiques
     """
-    with open("lien.txt", 'r', encoding = "utf-8") as fch_lien:
+    with open(NOM_FICHIER, 'r', encoding = "utf-8") as fch_lien:
         ancienne_url = fch_lien.readline()
         print(ancienne_url)
         print(nouvelle_url)
 
     return ancienne_url != nouvelle_url
 
+def write_url(nouvelle_url):
+    with open(NOM_FICHIER, 'w', encoding= 'utf-8') as fch:
+        fch.write(nouvelle_url)
