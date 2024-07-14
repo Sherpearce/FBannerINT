@@ -47,3 +47,11 @@ def urls_differentes(nouvelle_url):
 
     return ancienne_url != nouvelle_url
 
+async def fetch_url(url) -> BytesIO:
+    async with ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                print(f'Erreur lors du chargement de la page : {resp}')
+                return
+            data = BytesIO(await resp.read())
+    return data

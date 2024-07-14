@@ -4,7 +4,7 @@ from mytoken import get_token
 
 # Faire tourner des fonctions en parallèles (dont discord)
 from asyncio import create_task, sleep
-
+from load_url import fetch_url
 
 # Faire passer des dates
 from datetime import datetime
@@ -80,12 +80,7 @@ async def envoi_image_en_ligne(url):
 
     discord.utils.setup_logging()
 
-    async with ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status != 200:
-                print(f'Erreur lors du chargement de la page : {resp}')
-                return
-            data = BytesIO(await resp.read())
+    data = fetch_url(url)
     connect = create_task(connection(client))
     await sleep(1)
     sd_message = create_task(send_message(client, data))
