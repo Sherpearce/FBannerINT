@@ -7,8 +7,10 @@ from asyncio import run
 from datetime import datetime, date, time
 from time import sleep
 
-from load_url import load_menu_url, urls_differentes
+from load_url import load_menu_url, urls_differentes, write_url
 from bot_discord import envoi_image_en_ligne
+
+from mywebhook import send_file_to_webhooks
 
 def calcul_temps_d_attente(reussite:bool):
     """
@@ -77,6 +79,8 @@ def main():
         reussite = False
         if urls_differentes(new_url):
             reussite = run(envoi_image_en_ligne(new_url))
+            if reussite:
+                write_url(new_url)
         sleep(calcul_temps_d_attente(reussite=reussite))
 
 if __name__ == "__main__":
