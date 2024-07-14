@@ -10,7 +10,7 @@ from io import BytesIO
 from aiohttp import ClientSession
 
 # Faire passer des dates
-from datetime import datetime, date, time, deltatime
+from datetime import datetime, date, time
 
 # Récupérer et traiter le lien
 import xml.etree.cElementTree as cET
@@ -136,14 +136,14 @@ def urls_differentes(nouvelle_url):
 
     return ancienne_url != nouvelle_url
 
-def calcul_temps_d_attente(reussite:boolean):
+def calcul_temps_d_attente(reussite:bool):
     """
     Renvoi le temps d'attente en secondes avant le prochain horaire de vérification
     Les horaires sont:
         - dimanche 20h
         - dimanche 22h
         - lundi 20h
-    
+
     si @reussite vaut True, renvoit le temps d'attente avant le prochain "dimanche 20h"
     """
     now = datetime.today()
@@ -156,7 +156,7 @@ def calcul_temps_d_attente(reussite:boolean):
         if now_iso.weekday == 7:
             week +=1
         wake_up = datetime.combine(
-            date(now_iso.year, week, now_iso.weekday),
+            date.fromisocalendar(now_iso.year, week, now_iso.weekday),
             time(hour = 20)
         )
     else:
@@ -164,40 +164,37 @@ def calcul_temps_d_attente(reussite:boolean):
         if now_iso.weekday == 7:
             if now.hour < 20:
                 wake_up = datetime.combine(
-                    date(now_iso.year, now_iso.week, now_iso.weekday),
+                    date.fromisocalendar(now_iso.year, now_iso.week, now_iso.weekday),
                     time(hour = 20)
                 )
             elif now.hour < 22:
                 wake_up = datetime.combine(
-                    date(now_iso.year, now_iso.week, now_iso.weekday),
+                    date.fromisocalendar(now_iso.year, now_iso.week, now_iso.weekday),
                     time(hour = 22)
                 )
             else:
                 wake_up = datetime.combine(
-                    date(now_iso.year, now_iso.week +1, 1),
+                    date.fromisocalendar(now_iso.year, now_iso.week +1, 1),
                     time(hour = 20)
                 )
         # lundi avant 20h
         elif now_iso.weekday == 1 and now.hour < 20:
             wake_up = datetime.combine(
-                    date(now_iso.year, now_iso.week +1, 1),
+                    date.fromisocalendar(now_iso.year, now_iso.week , 1),
                     time(hour = 20)
                 )
         #cas général
         else:
             wake_up = datetime.combine(
-                    date(now_iso.year, now_iso.week +1, 7),
+                    date.fromisocalendar(now_iso.year, now_iso.week , 7),
                     time(hour = 20)
                 )
     return (wake_up-now).total_seconds()
 
-
 def main():
     """
-    Lancement général du service 
+    Lancement général du service
     """
-    # calcul du temps d'attente avant première vérification (dimanche 20h)
-    temps_d_attente = 0 # en secondes
 
     #lancement immédiat
     while True:
@@ -213,4 +210,4 @@ if __name__ == "__main__":
     # https://upload.wikimedia.org/wikipedia/commons/
     # thumb/7/73/Orange_trademark.svg/64px-Orange_trademark.svg.png"
     #run(envoi_image_en_ligne(link))
-    print(calcul_temps_d_attente())
+    print(calcul_temps_d_attente(False))
