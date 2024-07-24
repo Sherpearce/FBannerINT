@@ -31,11 +31,11 @@ def calcul_temps_d_attente(reussite:bool):
         if now_iso.weekday == 7:
             week +=1
         wake_up = datetime.combine(
-            date.fromisocalendar(now_iso.year, week, now_iso.weekday),
+            date.fromisocalendar(now_iso.year, week, 7),
             time(hour = 20)
         )
     else:
-        # dijonction de cas du dimanche
+        # disjonction de cas du dimanche
         if now_iso.weekday == 7:
             if now.hour < 20:
                 wake_up = datetime.combine(
@@ -64,6 +64,7 @@ def calcul_temps_d_attente(reussite:bool):
                     date.fromisocalendar(now_iso.year, now_iso.week , 7),
                     time(hour = 20)
                 )
+    print(wake_up, now)
     return (wake_up-now).total_seconds()
 
 def main():
@@ -77,11 +78,7 @@ def main():
         new_url = run(load_menu_url())
         reussite = False
         if urls_differentes(new_url):
-<<<<<<< HEAD
-            reussite = run(envoi_image_en_ligne(new_url))
-=======
             reussite = send_file_to_webhooks(new_url)
->>>>>>> webhook
             if reussite:
                 write_url(new_url)
         sleep(calcul_temps_d_attente(reussite=reussite))
@@ -92,4 +89,5 @@ if __name__ == "__main__":
     # thumb/7/73/Orange_trademark.svg/64px-Orange_trademark.svg.png"
     #run(envoi_image_en_ligne(link))
     print(calcul_temps_d_attente(False))
-    main()
+    print(calcul_temps_d_attente(True))
+    #main()
