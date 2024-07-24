@@ -8,7 +8,6 @@ from datetime import datetime, date, time
 from time import sleep
 
 from load_url import load_menu_url, urls_differentes, write_url
-from bot_discord import envoi_image_en_ligne
 
 from mywebhook import send_file_to_webhooks
 
@@ -78,7 +77,11 @@ def main():
         new_url = run(load_menu_url())
         reussite = False
         if urls_differentes(new_url):
+<<<<<<< HEAD
             reussite = run(envoi_image_en_ligne(new_url))
+=======
+            reussite = send_file_to_webhooks(new_url)
+>>>>>>> webhook
             if reussite:
                 write_url(new_url)
         sleep(calcul_temps_d_attente(reussite=reussite))

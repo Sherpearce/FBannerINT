@@ -1,16 +1,23 @@
+"""Module de travail avec les liens du webhook de publication du menu de la semaine"""
+
+
+# Pour l'envoi de l'image sans l'enregistrer
+from io import BytesIO
+from aiohttp import ClientSession
+
 # Récupérer et traiter le lien
 import xml.etree.cElementTree as cET
 from lxml import etree
 
 
-# Pour l'envoi de l'image sans la télécharger
-from io import BytesIO
-from aiohttp import ClientSession
+NOM_FICHIER = "lien.txt"
 
 NOM_FICHIER = "lien.txt"
 
 async def load_menu_url():
-
+    """
+    Charge l'url de l'image du menu de la semaine depuis le FB de Campus TMSP
+    """
     dnld = "https://www.facebook.com/groups/campusTMSP/"
 
     parser = etree.XMLParser(recover = True)
@@ -49,6 +56,19 @@ def urls_differentes(nouvelle_url):
 
     return ancienne_url != nouvelle_url
 
+async def fetch_url(url) -> BytesIO:
+    """Récupère les données du document donnée dans @url"""
+    async with ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                print(f'Erreur lors du chargement de la page : {resp}')
+                return
+            data = BytesIO(await resp.read())
+    return data
+
 def write_url(nouvelle_url):
+    """
+    remplace le contenu de @NOM_FICHIER par @nouvelle_url
+    """
     with open(NOM_FICHIER, 'w', encoding= 'utf-8') as fch:
         fch.write(nouvelle_url)
